@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Medicine - MediAlert</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fa-solid fa-heart-pulse"></i>
+                <h2>MediAlert</h2>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html"><i class="fa-solid fa-table-columns"></i><span>Dashboard</span></a></li>
+                <li class="active"><a href="add-medicine.html"><i class="fa-solid fa-pills"></i><span>Add Medicine</span></a></li>
+                <li><a href="journal.html"><i class="fa-solid fa-book-medical"></i><span>Journal</span></a></li>
+                <li><a href="insight.html"><i class="fa-solid fa-chart-line"></i><span>Health Insights</span></a></li>
+                <li><a href="#"><i class="fa-solid fa-file-pdf"></i><span>Report</span></a></li>
+                <li><a href="settings.html"><i class="fa-solid fa-gear"></i><span>Settings</span></a></li>
+            </ul>
+            <div class="user-profile">
+                <img src="" alt="User Avatar">
+                <div class="user-info">
+                    <h4 id="sidebar-user-name">Guest</h4>
+                    <small id="sidebar-user-email">email@example.com</small>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header>
+                <h1>Add New Medication</h1>
+                <p>Add a new medication to your permanent schedule.</p>
+            </header>
+
+            <div class="form-container">
+                <form id="new-med-form">
+                    <div class="form-section">
+                        <div class="form-group">
+                            <label for="med-name">Medicine Name</label>
+                            <input type="text" id="med-name" placeholder="e.g., Lisinopril" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="med-dosage">Dosage</label>
+                            <input type="text" id="med-dosage" placeholder="e.g., 10mg">
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <div class="form-group">
+                            <label for="med-frequency">Frequency</label>
+                            <select id="med-frequency">
+                                <option value="daily">Every Day</option>
+                                <option value="specific_days">Specific Days of the Week</option>
+                                <option value="as_needed">As Needed</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group day-selector hidden" id="day-selector">
+                            <label>On which days?</label>
+                            <div class="days-checkboxes">
+                                <label><input type="checkbox" name="day" value="1"> M</label>
+                                <label><input type="checkbox" name="day" value="2"> T</label>
+                                <label><input type="checkbox" name="day" value="3"> W</label>
+                                <label><input type="checkbox" name="day" value="4"> T</label>
+                                <label><input type="checkbox" name="day" value="5"> F</label>
+                                <label><input type="checkbox" name="day" value="6"> S</label>
+                                <label><input type="checkbox" name="day" value="0"> S</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <div class="form-group">
+                             <label>At what time(s)?</label>
+                             <div id="time-list">
+                                 <input type="time" class="med-time" required>
+                             </div>
+                             <button type="button" id="add-time-btn" class="add-time-btn">Add another time</button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <a href="index.html" class="cancel-btn">Cancel</a>
+                        <button type="submit" class="submit-btn">Save Medication</button>
+                    </div>
+                </form>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="add-medicine.js"></script>
+</body>
+</html>

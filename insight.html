@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediAlert - Health Insights</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        /* ===== Global Styles & Variables from Dashboard ===== */
+        :root {
+            --primary-color: #4f46e5;
+            --secondary-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --bg-color: #f3f4f6;
+            --card-bg-color: #ffffff;
+            --text-color: #374151;
+            --text-light: #6b7280;
+            --border-color: #e5e7eb;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        /* ===== Main Layout (Sidebar & Content) ===== */
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background-color: var(--bg-color);
+        }
+
+        .sidebar {
+            order: 2;
+            width: 100%;
+            background-color: var(--card-bg-color);
+            border-top: 1px solid var(--border-color);
+            padding: 0.5rem 0;
+            flex-shrink: 0;
+            z-index: 100;
+        }
+
+        .sidebar .logo,
+        .sidebar .user-profile {
+            display: none;
+        }
+
+        .sidebar .nav-links {
+            display: flex;
+            justify-content: space-around;
+            list-style: none;
+            width: 100%;
+        }
+
+        .sidebar .nav-links a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            text-decoration: none;
+            color: var(--text-light);
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        .sidebar .nav-links a i {
+            font-size: 20px;
+        }
+
+        .sidebar .nav-links li.active a {
+            color: var(--primary-color);
+        }
+
+        .main-content {
+            order: 1;
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            padding-bottom: 65px;
+            /* Space for bottom nav */
+        }
+
+        .main-content header {
+            margin-bottom: 1.5rem;
+        }
+
+        .main-content header h1 {
+            font-size: 24px;
+        }
+
+        .main-content header p {
+            color: var(--text-light);
+        }
+
+        .card {
+            background-color: var(--card-bg-color);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        /* ===== Insights Page Specific Grid Layout ===== */
+        .insights-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        /* Filter & Scorecard */
+        .filters {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .filters label {
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .filters select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            background-color: var(--bg-color);
+        }
+
+        .filters select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+        }
+
+        .scorecard-wrapper {
+             padding: 1rem;
+        }
+
+        .scorecard {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .score-display {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            flex-shrink: 0;
+        }
+        .score-circle {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+        .score-circle circle {
+            fill: none;
+            stroke-width: 10;
+        }
+        .score-circle .bg { stroke: var(--bg-color); }
+        .score-circle .fg { stroke-linecap: round; transition: all 0.5s ease-out; }
+
+        .score-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .score-text span { font-size: 0.9rem; color: var(--text-light); margin-left: 2px; }
+
+        .score-details h4 { font-size: 1rem; margin: 0 0 4px 0; }
+        .score-details p { font-size: 0.85rem; color: var(--text-light); margin: 0; }
+
+        .grade-a-plus .fg, .grade-a .fg { stroke: var(--secondary-color); }
+        .grade-b .fg { stroke: var(--warning-color); }
+        .grade-c .fg { stroke: var(--danger-color); }
+        
+        .grade-a-plus h4, .grade-a h4 { color: var(--secondary-color); }
+        .grade-b h4 { color: var(--warning-color); }
+        .grade-c h4 { color: var(--danger-color); }
+
+
+        /* Charts */
+        .chart-container {
+            flex-grow: 1;
+            min-height: 250px;
+        }
+
+        /* Heatmap */
+        .heatmap-container {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+            margin-top: 1rem;
+        }
+        .heatmap-day {
+            aspect-ratio: 1 / 1;
+            background-color: #ebedf0;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .heatmap-day[data-level="1"] { background-color: #fad2d2; } /* Awful */
+        .heatmap-day[data-level="2"] { background-color: #fde6aa; } /* Bad */
+        .heatmap-day[data-level="3"] { background-color: #d1f7c4; } /* OK */
+        .heatmap-day[data-level="4"] { background-color: #9be9a8; } /* Good */
+        .heatmap-day[data-level="5"] { background-color: #40c463; } /* Great */
+
+        /* AI Insights & Download */
+        .ai-insights-list {
+            list-style: none;
+            padding: 0;
+            flex-grow: 1;
+        }
+        .ai-insights-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .ai-insights-list li:last-child {
+             border-bottom: none; margin-bottom: 0; 
+        }
+        .ai-insights-list i {
+            color: var(--primary-color);
+            margin-top: 4px;
+        }
+        .ai-insights-list div {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+
+        .download-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: opacity 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+        .download-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* ===== TABLET STYLES (min-width: 768px) ===== */
+        @media (min-width: 768px) {
+            .main-content {
+                padding: 2rem;
+                padding-bottom: 2rem;
+            }
+            .insights-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .full-span {
+                grid-column: 1 / -1;
+            }
+        }
+
+        /* ===== DESKTOP STYLES (min-width: 1024px) ===== */
+        @media (min-width: 1024px) {
+            .container {
+                flex-direction: row;
+            }
+            .sidebar {
+                order: unset;
+                width: 260px;
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-start;
+                padding: 24px;
+                border-top: none;
+                border-right: 1px solid var(--border-color);
+            }
+            .sidebar .logo {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                font-size: 24px;
+                font-weight: 600;
+                margin-bottom: 40px;
+                color: var(--text-color);
+            }
+            .sidebar .logo i {
+                color: var(--primary-color);
+                font-size: 28px;
+            }
+            .sidebar .nav-links {
+                flex-direction: column;
+                justify-content: flex-start;
+                flex-grow: 1;
+                gap: 8px;
+            }
+            .sidebar .nav-links a {
+                flex-direction: row;
+                justify-content: flex-start;
+                align-items: center;
+                gap: 16px;
+                padding: 12px 16px;
+                font-size: 15px;
+                border-radius: 8px;
+                transition: all 0.3s ease;
+            }
+            .sidebar .nav-links a i {
+                font-size: 18px;
+                width: 20px;
+                text-align: center;
+            }
+            .sidebar .nav-links li a:hover {
+                background-color: #eef2ff;
+                color: var(--primary-color);
+            }
+            .sidebar .nav-links li.active a {
+                background-color: var(--primary-color);
+                color: white;
+            }
+
+            .sidebar .user-profile {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding-top: 20px;
+                border-top: 1px solid var(--border-color);
+            }
+            .sidebar .user-profile img {
+                border-radius: 50%;
+            }
+            .sidebar .user-profile .user-info h4 {
+                font-size: 14px;
+                font-weight: 600;
+            }
+            .sidebar .user-profile .user-info small {
+                font-size: 12px;
+                color: var(--text-light);
+            }
+
+            .main-content {
+                order: unset;
+                padding: 32px;
+            }
+            .insights-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            .card.filters-card { grid-column: span 1; }
+            .card.scorecard-wrapper { grid-column: span 3; }
+            .card.heatmap-card { grid-column: span 4; }
+            .card.correlation-card { grid-column: span 2; }
+            .card.adherence-card { grid-column: span 2; }
+            .card.symptom-card { grid-column: span 2; }
+            .card.ai-insights-card { grid-column: span 2; }
+            .card.download-card { grid-column: span 4; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fa-solid fa-heart-pulse"></i>
+                <h2>MediAlert</h2>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html"><i class="fa-solid fa-table-columns"></i><span>Dashboard</span></a></li>
+                <li><a href="add-medicine.html"><i class="fa-solid fa-pills"></i><span>Add Medicine</span></a></li>
+                <li><a href="journal.html"><i class="fa-solid fa-book-medical"></i><span>Journal</span></a></li>
+                <li class="active"><a href="insight.html"><i class="fa-solid fa-chart-line"></i><span>Health Insights</span></a></li>
+                <li><a href="#"><i class="fa-solid fa-file-pdf"></i><span>Report</span></a></li>
+                <li><a href="settings.html"><i class="fa-solid fa-gear"></i><span>Settings</span></a></li>
+            </ul>
+            <div class="user-profile">
+                <img src="https://i.pravatar.cc/40" alt="User Avatar">
+                <div class="user-info">
+                    <h4 id="sidebar-user-name">Guest</h4>
+                    <small id="sidebar-user-email">email@example.com</small>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header>
+                <h1>Health Insights</h1>
+                <p>Visualize your health data and uncover patterns.</p>
+            </header>
+
+            <div class="insights-grid">
+                <div class="card filters-card">
+                    <div class="filters">
+                        <label for="date-range-filter">Show Data For:</label>
+                        <select id="date-range-filter">
+                            <option value="7">Last 7 Days</option>
+                            <option value="30" selected>Last 30 Days</option>
+                            <option value="90">Last 90 Days</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="card scorecard-wrapper">
+                    <div class="scorecard" id="adherence-scorecard">
+                        <div class="score-display">
+                             <svg class="score-circle">
+                                <circle class="bg" r="36" cx="40" cy="40" />
+                                <circle class="fg" id="score-circle" r="36" cx="40" cy="40" />
+                            </svg>
+                            <div id="adherence-score" class="score-text">0<span>%</span></div>
+                        </div>
+                        <div class="score-details">
+                            <h4 id="adherence-grade">C</h4>
+                            <p id="adherence-feedback">Let's improve together!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card heatmap-card full-span">
+                    <div class="card-header">
+                        <h3>Monthly Mood Heatmap</h3>
+                    </div>
+                    <div id="mood-heatmap-grid" class="heatmap-container"></div>
+                </div>
+
+                <div class="card correlation-card">
+                    <div class="card-header">
+                        <h3>Mood vs Adherence</h3>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="correlationChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card adherence-card">
+                    <div class="card-header">
+                        <h3>Medication Adherence Trend</h3>
+                    </div>
+                     <div class="chart-container">
+                        <canvas id="adherenceChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card symptom-card">
+                    <div class="card-header">
+                        <h3>Symptom Frequency</h3>
+                    </div>
+                     <div class="chart-container">
+                        <canvas id="symptomChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="card ai-insights-card">
+                     <div class="card-header">
+                        <h3><i class="fa-solid fa-wand-magic-sparkles"></i> AI Powered Insights</h3>
+                    </div>
+                    <ul id="ai-insights-list" class="ai-insights-list">
+                        <li><i class="fa-solid fa-circle-info"></i><div>Select a date range to generate insights.</div></li>
+                    </ul>
+                </div>
+
+                <div class="card download-card full-span">
+                     <button id="download-report-btn" class="download-btn">
+                        <i class="fa-solid fa-file-arrow-down"></i> Download PDF Report
+                    </button>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof Chart === 'undefined' || typeof jspdf === 'undefined') {
+            console.error("Chart.js or jsPDF not loaded!");
+            alert("Important libraries could not be loaded. Please check your internet connection and refresh.");
+            return;
+        }
+
+        // --- DOM ELEMENTS ---
+        const dateRangeFilter = document.getElementById('date-range-filter');
+        const aiInsightsList = document.getElementById('ai-insights-list');
+        const downloadBtn = document.getElementById('download-report-btn');
+        const adherenceScorecard = document.getElementById('adherence-scorecard');
+        const adherenceScoreEl = document.getElementById('adherence-score');
+        const adherenceGradeEl = document.getElementById('adherence-grade');
+        const adherenceFeedbackEl = document.getElementById('adherence-feedback');
+        const scoreCircle = document.getElementById('score-circle');
+        const moodHeatmapGrid = document.getElementById('mood-heatmap-grid');
+
+        
+        
+        let adherenceChart, symptomChart, correlationChart;
+        
+        const processDataForCharts = (days) => {
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(endDate.getDate() - days + 1);
+            
+            // Dummy Data for demonstration
+            const dummyMedications = (() => {
+                let meds = [];
+                for(let i=0; i < days; i++) {
+                    let d = new Date(startDate);
+                    d.setDate(d.getDate() + i);
+                    let dateKey = d.toISOString().split('T')[0];
+                    // Simulate 2 meds per day
+                    meds.push({id: `${dateKey}-1`, status: Math.random() > 0.2 ? 'taken' : 'skipped'});
+                    meds.push({id: `${dateKey}-2`, status: Math.random() > 0.3 ? 'taken' : 'skipped'});
+                }
+                return meds;
+            })();
+            
+            const dummyJournal = (() => {
+                let entries = {};
+                const moods = ['awful', 'bad', 'ok', 'good', 'great'];
+                const symptoms = ['Headache', 'Fatigue', 'Nausea', 'Fever'];
+                for(let i=0; i < days; i++) {
+                     let d = new Date(startDate);
+                     d.setDate(d.getDate() + i);
+                     let dateKey = d.toISOString().split('T')[0];
+                     if (Math.random() > 0.15) { // 85% chance of entry
+                        entries[dateKey] = {
+                            mood: moods[Math.floor(Math.random() * moods.length)],
+                            symptoms: Math.random() > 0.5 ? [symptoms[Math.floor(Math.random() * symptoms.length)]] : []
+                        };
+                     }
+                }
+                return entries;
+            })();
+
+            const labels = [];
+            const adherenceData = [];
+            const moodData = [];
+            const missedMedsData = [];
+            const symptomFrequency = {};
+
+            for (let i=0; i<days; i++) {
+                let d = new Date(startDate);
+                d.setDate(d.getDate() + i);
+                const dateKey = d.toISOString().split('T')[0];
+                labels.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+                
+                const medsForDay = dummyMedications.filter(m => m.id.startsWith(dateKey));
+                const journalForDay = dummyJournal[dateKey];
+                
+                if (medsForDay.length > 0) {
+                    const takenCount = medsForDay.filter(m => m.status === 'taken').length;
+                    adherenceData.push(Math.round((takenCount / medsForDay.length) * 100));
+                    if(takenCount < medsForDay.length) { missedMedsData.push(1); } else { missedMedsData.push(null); }
+                } else {
+                    adherenceData.push(null);
+                    missedMedsData.push(null);
+                }
+                
+                const moodMap = { awful: 1, bad: 2, ok: 3, good: 4, great: 5 };
+                moodData.push(journalForDay ? moodMap[journalForDay.mood] : null);
+                
+                if (journalForDay && journalForDay.symptoms) {
+                    journalForDay.symptoms.forEach(symptom => {
+                        symptomFrequency[symptom] = (symptomFrequency[symptom] || 0) + 1;
+                    });
+                }
+            }
+            return { labels, adherenceData, moodData, symptomFrequency, missedMedsData, startDate };
+        };
+
+        const renderAdherenceScorecard = (adherenceData) => {
+            const validAdherenceData = adherenceData.filter(d => d !== null);
+            const avgAdherence = validAdherenceData.length === 0 ? 0 : Math.round(validAdherenceData.reduce((a, b) => a + b, 0) / validAdherenceData.length);
+            
+            adherenceScoreEl.innerHTML = `${avgAdherence}<span>%</span>`;
+            
+            let grade, feedback, gradeClass;
+            if (avgAdherence >= 95) { grade = 'A+'; feedback = 'Outstanding consistency!'; gradeClass = 'grade-a-plus'; }
+            else if (avgAdherence >= 85) { grade = 'A'; feedback = 'Excellent job on track.'; gradeClass = 'grade-a'; }
+            else if (avgAdherence >= 70) { grade = 'B'; feedback = 'Good effort, keep it up!'; gradeClass = 'grade-b'; }
+            else { grade = 'C'; feedback = 'Let\'s focus on consistency.'; gradeClass = 'grade-c'; }
+            
+            adherenceGradeEl.textContent = grade;
+            adherenceFeedbackEl.textContent = feedback;
+            adherenceScorecard.className = 'scorecard ' + gradeClass;
+
+            const radius = scoreCircle.r.baseVal.value;
+            const circumference = 2 * Math.PI * radius;
+            scoreCircle.style.strokeDasharray = circumference;
+            scoreCircle.style.strokeDashoffset = circumference - (avgAdherence / 100) * circumference;
+        };
+        
+        const renderMoodHeatmap = (startDate, days) => {
+            moodHeatmapGrid.innerHTML = '';
+             const dummyJournal = (() => {
+                let entries = {};
+                const moods = ['awful', 'bad', 'ok', 'good', 'great'];
+                for(let i=0; i < days; i++) {
+                     let d = new Date(startDate);
+                     d.setDate(d.getDate() + i);
+                     let dateKey = d.toISOString().split('T')[0];
+                     if (Math.random() > 0.15) {
+                        entries[dateKey] = { mood: moods[Math.floor(Math.random() * moods.length)] };
+                     }
+                }
+                return entries;
+            })();
+            const moodMap = { awful: 1, bad: 2, ok: 3, good: 4, great: 5 };
+
+            for (let i = 0; i < days; i++) {
+                let day = new Date(startDate);
+                day.setDate(day.getDate() + i);
+                const dateKey = day.toISOString().split('T')[0];
+                
+                const dayEl = document.createElement('div');
+                dayEl.className = 'heatmap-day';
+                
+                const entry = dummyJournal[dateKey];
+                if (entry) {
+                    dayEl.dataset.level = moodMap[entry.mood];
+                    dayEl.title = `${dateKey}: ${entry.mood}`;
+                } else {
+                    dayEl.title = `${dateKey}: No entry`;
+                }
+                moodHeatmapGrid.appendChild(dayEl);
+            }
+        };
+        
+        const renderCharts = (data) => {
+            const chartOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { grid: { drawBorder: false } },
+                    x: { grid: { display: false } }
+                }
+            };
+            if(adherenceChart) adherenceChart.destroy();
+            if(symptomChart) symptomChart.destroy();
+            if(correlationChart) correlationChart.destroy();
+
+            adherenceChart = new Chart(document.getElementById('adherenceChart'), {
+                type: 'bar',
+                data: { labels: data.labels, datasets: [{ label: '% Adherence', data: data.adherenceData, backgroundColor: 'rgba(79, 70, 229, 0.7)', borderRadius: 4, }] },
+                options: { ...chartOptions, scales: { y: { beginAtZero: true, max: 100 } } }
+            });
+
+            const sortedSymptoms = Object.entries(data.symptomFrequency).sort(([,a],[,b]) => b-a);
+            symptomChart = new Chart(document.getElementById('symptomChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: sortedSymptoms.map(s => s[0]),
+                    datasets: [{ data: sortedSymptoms.map(s => s[1]), backgroundColor: ['#ef4444', '#f59e0b', '#84cc16', '#22c55e', '#3b82f6'] }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+            
+            correlationChart = new Chart(document.getElementById('correlationChart'), {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [
+                        { label: 'Mood Trend', data: data.moodData, borderColor: '#f59e0b', tension: 0.3, yAxisID: 'yMood', spanGaps: true, pointRadius: 0 },
+                        { label: 'Missed Medication', data: data.missedMedsData, type: 'bar', backgroundColor: 'rgba(239, 68, 68, 0.5)', yAxisID: 'yMissed', borderRadius: 4 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        yMood: { position: 'left', min: 1, max: 5, grid: { drawBorder: false }, ticks: { callback: value => ['Awful', 'Bad', 'OK', 'Good', 'Great'][value-1] } },
+                        yMissed: { position: 'right', display: false, min: 0, max: 1 }
+                    }
+                }
+            });
+        };
+
+        const generateAiInsights = (data) => {
+            aiInsightsList.innerHTML = '';
+            let insights = [];
+            const avgAdherence = data.adherenceData.filter(d => d !== null).reduce((a, b) => a + b, 0) / data.adherenceData.filter(d => d !== null).length;
+            if (avgAdherence < 75) insights.push("There's a potential link between lower adherence and days with more reported symptoms. Staying consistent with medication may help manage symptoms better.");
+            else insights.push("Your medication adherence is strong! This consistency is key to managing your health effectively.");
+
+            const sortedSymptoms = Object.entries(data.symptomFrequency).sort(([,a],[,b]) => b-a);
+            if (sortedSymptoms.length > 0) insights.push(`Your most frequent symptom was <strong>${sortedSymptoms[0][0]}</strong>. Consider tracking its triggers in your journal notes.`);
+            else insights.push("You haven't reported many symptoms recently, which is a positive sign. Keep up the detailed logging!");
+
+            let correlationFound = false;
+            for(let i=0; i < data.labels.length; i++){ if(data.missedMedsData[i] !== null && data.moodData[i] <= 2){ correlationFound = true; break; } }
+            if (correlationFound) insights.push("It appears your mood is lower on days you miss medication. This highlights the importance of your treatment plan.");
+
+            if (insights.length === 0) insights.push("Keep logging daily to uncover more personalized insights about your health journey.");
+            
+            insights.forEach(insight => {
+                const li = document.createElement('li');
+                li.innerHTML = `<i class="fa-solid fa-circle-check"></i> <div>${insight}</div>`;
+                aiInsightsList.appendChild(li);
+            });
+        };
+
+        const downloadReport = async () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            doc.text("MediAlert Health Report", 14, 22);
+            doc.text(`Period: Last ${dateRangeFilter.value} Days`, 14, 30);
+            
+            doc.addImage(document.getElementById('adherenceChart').toDataURL('image/png'), 'PNG', 14, 40, 180, 80);
+            doc.addImage(document.getElementById('correlationChart').toDataURL('image/png'), 'PNG', 14, 130, 180, 80);
+            
+            doc.save(`MediAlert-Report.pdf`);
+        };
+
+        const updatePage = () => {
+            const days = parseInt(dateRangeFilter.value);
+            const data = processDataForCharts(days);
+            renderAdherenceScorecard(data.adherenceData);
+            renderMoodHeatmap(data.startDate, days);
+            renderCharts(data);
+            generateAiInsights(data);
+        };
+        
+        dateRangeFilter.addEventListener('change', updatePage);
+        downloadBtn.addEventListener('click', downloadReport);
+
+        updatePage();
+    });
+    </script>
+</body>
+</html>

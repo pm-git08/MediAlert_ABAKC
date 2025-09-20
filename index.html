@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediAlert Web Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#2b6cb0">
+    <script>
+        if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.register("/service-worker.js");
+        }
+    </script>
+
+
+
+    <script src="theme.js"></script>
+</head>
+
+<body>
+    <div class="container">
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fa-solid fa-heart-pulse"></i>
+                <h2>MediAlert</h2>
+            </div>
+            <ul class="nav-links">
+                <li class="active"><a href="index.html"><i
+                            class="fa-solid fa-table-columns"></i><span>Dashboard</span></a></li>
+                <li><a href="add-medicine.html"><i class="fa-solid fa-pills"></i><span>Add Medicine</span></a></li>
+                <li><a href="journal.html"><i class="fa-solid fa-book-medical"></i><span>Journal</span></a></li>
+                <li><a href="insight.html"><i class="fa-solid fa-chart-line"></i><span>Health Insights</span></a></li>
+                <li><a href="#"><i class="fa-solid fa-file-pdf"></i><span>Report</span></a></li>
+                <li><a href="settings.html"><i class="fa-solid fa-gear"></i><span>Settings</span></a></li>
+            </ul>
+            <div class="user-profile">
+                <img src="" alt="User Avatar">
+                <div class="user-info">
+                    <h4 id="sidebar-user-name">Guest</h4>
+                    <small id="sidebar-user-email">email@example.com</small>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header>
+                <h1>Dashboard</h1>
+                <p>Tuesday, 16 September 2025. Welcome back, Alex!</p>
+            </header>
+
+            <div class="card" id="combined-vitals-card">
+                <div class="card-header">
+                    <h3>Track Your Vitals</h3>
+                </div>
+                <div class="vitals-content">
+                    <div class="vital-item" id="bp-item">
+                        <div class="vital-item-header">
+                            <div class="icon-bg" id="bp-icon-bg">
+                                <i class="fa-solid fa-heart-pulse"></i>
+                            </div>
+                            <h4>Blood Pressure</h4>
+                            <button class="edit-btn" aria-label="Edit Blood Pressure">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                        </div>
+                        <div class="vital-item-body">
+                            <p class="value">
+                                <span class="value-display">120/80</span>
+                                <input type="text" class="value-input hidden" value="120/80">
+                                <span class="unit">mmHg</span>
+                            </p>
+                        </div>
+                        <div class="vital-item-footer">
+                            <span class="status-dot"></span>
+                            <p>Normal</p>
+                        </div>
+                    </div>
+                    <div class="vital-divider"></div>
+                    <div class="vital-item" id="bs-item">
+                        <div class="vital-item-header">
+                            <div class="icon-bg" id="bs-icon-bg">
+                                <i class="fa-solid fa-droplet"></i>
+                            </div>
+                            <h4>Blood Sugar</h4>
+                            <button class="edit-btn" aria-label="Edit Blood Sugar">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                        </div>
+                        <div class="vital-item-body">
+                            <p class="value">
+                                <span class="value-display">90</span>
+                                <input type="text" class="value-input hidden" value="90">
+                                <span class="unit">mg/dL</span>
+                            </p>
+                        </div>
+                        <div class="vital-item-footer">
+                            <span class="status-dot"></span>
+                            <p>Normal</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="dashboard-grid">
+                <div class="card" id="today-schedule">
+                    <div class="card-header">
+                        <h3>Today's Schedule</h3>
+                        <button id="add-med-btn" class="add-btn"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <ul id="meds-list">
+                    </ul>
+                </div>
+
+                <div class="card" id="vitals-chart-card">
+                    <h3>Vitals Overview (Weekly)</h3>
+                    <div class="chart-container">
+                        <canvas id="vitalsChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="card" id="calendar-card">
+                    <h3>September 2025</h3>
+                    <div class="calendar">
+                        <div class="day-name">S</div>
+                        <div class="day-name">M</div>
+                        <div class="day-name">T</div>
+                        <div class="day-name">W</div>
+                        <div class="day-name">T</div>
+                        <div class="day-name">F</div>
+                        <div class="day-name">S</div>
+                        <div class="date other-month">31</div>
+                        <div class="date">1</div>
+                        <div class="date">2</div>
+                        <div class="date">3</div>
+                        <div class="date">4</div>
+                        <div class="date">5</div>
+                        <div class="date">6</div>
+                        <div class="date">7</div>
+                        <div class="date">8</div>
+                        <div class="date">9</div>
+                        <div class="date">10</div>
+                        <div class="date">11</div>
+                        <div class="date">12</div>
+                        <div class="date">13</div>
+                        <div class="date">14</div>
+                        <div class="date">15</div>
+                        <div class="date today">16</div>
+                        <div class="date">17</div>
+                        <div class="date">18</div>
+                        <div class="date">19</div>
+                        <div class="date">20</div>
+                        <div class="date">21</div>
+                        <div class="date">22</div>
+                        <div class="date">23</div>
+                        <div class="date">24</div>
+                        <div class="date">25</div>
+                        <div class="date">26</div>
+                        <div class="date">27</div>
+                        <div class="date">28</div>
+                        <div class="date">29</div>
+                        <div class="date">30</div>
+                        <div class="date other-month">1</div>
+                        <div class="date other-month">2</div>
+                        <div class="date other-month">3</div>
+                        <div class="date other-month">4</div>
+                    </div>
+                </div>
+
+                <div class="card" id="streak-card">
+                    <div class="streak-header">
+                        <h3>Medication Streak</h3>
+                        <i class="fa-solid fa-fire-flame-curved"></i>
+                    </div>
+                    <div class="streak-body">
+                        <div class="streak-count">14</div>
+                        <p class="streak-label">Days in a row!</p>
+                    </div>
+                    <div class="streak-stats">
+                        <div class="stat-item">
+                            <small>Longest Streak</small>
+                            <span id="longest-streak-val">32</span>
+                        </div>
+                    </div>
+                    <div class="weekly-tracker">
+                    </div>
+                </div>
+
+                <div class="card" id="quick-actions-card">
+                    <h3>Quick Actions</h3>
+                    <button class="action-btn mood-btn"><i class="fa-regular fa-face-smile"></i> Log
+                        Mood/Symptoms</button>
+                    <button class="action-btn ai-btn"><i class="fa-solid fa-robot"></i> Ask AI Assistant</button>
+                    <button class="action-btn report-btn"><i class="fa-solid fa-download"></i> Get Weekly
+                        Report</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="modal-overlay" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Add Quick Medicine for Today</h2>
+                <button class="close-btn">&times;</button>
+            </div>
+            <form id="add-med-form">
+                <div class="form-group">
+                    <label for="med-name">Medicine Name</label>
+                    <input type="text" id="med-name" required placeholder="e.g., Ibuprofen">
+                </div>
+                <div class="form-group">
+                    <label for="med-dosage">Dosage</label>
+                    <input type="text" id="med-dosage" required placeholder="e.g., 200mg">
+                </div>
+                <div class="form-group">
+                    <label for="med-time">Time</label>
+                    <input type="time" id="med-time" required>
+                </div>
+                <button type="submit" class="submit-btn">Add Medicine</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediAlert - Health Journal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        /* ===== Global Styles & Variables from Dashboard ===== */
+        :root {
+            --primary-color: #4f46e5;
+            --secondary-color: #10b981;
+            --bg-color: #f3f4f6;
+            --card-bg-color: #ffffff;
+            --text-color: #374151;
+            --text-light: #6b7280;
+            --border-color: #e5e7eb;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --mood-great: #dcfce7;
+            --mood-good: #f0fdf4;
+            --mood-ok: #fefce8;
+            --mood-bad: #fee2e2;
+            --mood-awful: #fde8e8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* ===== Main Layout (Sidebar & Content) ===== */
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background-color: var(--bg-color);
+        }
+
+        .sidebar {
+            order: 2;
+            width: 100%;
+            background-color: var(--card-bg-color);
+            border-top: 1px solid var(--border-color);
+            padding: 0.5rem 0;
+            flex-shrink: 0;
+            z-index: 100;
+        }
+
+        .sidebar .logo,
+        .sidebar .user-profile {
+            display: none;
+        }
+
+        .sidebar .nav-links {
+            display: flex;
+            justify-content: space-around;
+            list-style: none;
+            width: 100%;
+        }
+
+        .sidebar .nav-links a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 8px;
+            text-decoration: none;
+            color: var(--text-light);
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        .sidebar .nav-links a i {
+            font-size: 20px;
+        }
+
+        .sidebar .nav-links li.active a {
+            color: var(--primary-color);
+        }
+
+        .main-content {
+            order: 1;
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            padding-bottom: 65px; /* Space for bottom nav */
+        }
+
+        .main-content header {
+            margin-bottom: 1.5rem;
+        }
+
+        .main-content header h1 {
+            font-size: 24px;
+        }
+
+        .main-content header p {
+            color: var(--text-light);
+        }
+
+        .card {
+            background-color: var(--card-bg-color);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .card-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+        }
+
+        /* ===== Journal Specific Grid Layout ===== */
+        .journal-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        /* ===== Journal Form Styles ===== */
+        .form-section {
+            margin-bottom: 1.5rem;
+        }
+        .form-section label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--text-color);
+        }
+
+        .mood-selector {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.5rem;
+        }
+
+        .mood-option {
+            flex: 1;
+            text-align: center;
+            cursor: pointer;
+            padding: 0.75rem 0.25rem;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .mood-option:hover {
+            background-color: #f0f0f0;
+        }
+        .mood-option .emoji {
+            font-size: 2.5rem;
+            transition: transform 0.2s ease;
+        }
+        .mood-option .label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-light);
+            font-weight: 500;
+            margin-top: 0.25rem;
+        }
+        .mood-option.selected {
+            border-color: var(--primary-color);
+            background-color: #eef2ff;
+        }
+        .mood-option.selected .emoji {
+            transform: scale(1.15);
+        }
+        .mood-option.selected .label {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .symptom-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+        .symptom-tag {
+            background: var(--bg-color);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            border: 1px solid var(--border-color);
+        }
+        .symptom-tag:hover {
+            border-color: var(--primary-color);
+        }
+        .symptom-tag.selected {
+            background: var(--primary-color);
+            color: #fff;
+            border-color: var(--primary-color);
+        }
+
+        .notes-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            resize: vertical;
+        }
+        .notes-textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            margin-top: 1rem;
+        }
+        .submit-btn:hover {
+            background-color: #4338ca;
+        }
+
+        /* ===== Calendar & History Styles ===== */
+        #calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        #calendar-header button {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            cursor: pointer;
+            color: var(--primary-color);
+            padding: 0.5rem;
+        }
+        #month-year {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        #calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+        .calendar-day-name {
+            text-align: center;
+            font-weight: 600;
+            color: var(--text-light);
+            font-size: 0.8rem;
+        }
+        .calendar-day {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 38px;
+            width: 38px;
+            margin: 0 auto;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+            position: relative;
+            font-size: 0.9rem;
+        }
+        .calendar-day:hover {
+            background-color: #eef2ff;
+        }
+        .calendar-day.today {
+            font-weight: 700;
+            border: 2px solid var(--primary-color);
+        }
+        .calendar-day.has-entry {
+            font-weight: 700;
+            color: var(--text-color);
+        }
+        .calendar-day.mood-great { background-color: var(--mood-great); }
+        .calendar-day.mood-good { background-color: var(--mood-good); }
+        .calendar-day.mood-ok { background-color: var(--mood-ok); }
+        .calendar-day.mood-bad { background-color: var(--mood-bad); }
+        .calendar-day.mood-awful { background-color: var(--mood-awful); }
+
+        #entry-display {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border-color);
+        }
+        #entry-display h3 { margin: 0 0 1rem 0; font-size: 1.1rem; }
+        #display-mood, #display-symptoms, #display-notes { margin-bottom: 1rem; line-height: 1.6; }
+        #display-mood strong, #display-symptoms strong, #display-notes strong {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        #display-mood .emoji { font-size: 1.5rem; margin-right: 0.5rem; vertical-align: middle; }
+        #display-notes p { margin: 0; color: var(--text-light); }
+        
+        /* ===== AI Insights Card Styles ===== */
+        .ai-btn {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid transparent;
+            background-color: var(--secondary-color);
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.2s ease;
+            margin-bottom: 1rem;
+        }
+        .ai-btn:hover {
+            opacity: 0.9;
+        }
+        .ai-summary {
+            background: var(--bg-color);
+            padding: 1rem;
+            border-radius: 8px;
+            min-height: 50px;
+            white-space: pre-wrap;
+            color: var(--text-light);
+            line-height: 1.6;
+        }
+        
+        /* ===== Toast Notification ===== */
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(150%);
+            background-color: #2c3e50;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 2000;
+            transition: transform 0.4s ease-in-out;
+            font-weight: 500;
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+
+        /* ===== TABLET STYLES (min-width: 768px) ===== */
+        @media (min-width: 768px) {
+            .main-content {
+                padding: 2rem;
+                padding-bottom: 2rem;
+            }
+            .journal-grid {
+                grid-template-columns: repeat(2, 1fr);
+                align-items: start;
+            }
+            #journal-history-card {
+                grid-column: 1 / -1;
+            }
+        }
+
+        /* ===== DESKTOP STYLES (min-width: 1024px) ===== */
+        @media (min-width: 1024px) {
+            .container {
+                flex-direction: row;
+            }
+            .sidebar {
+                order: unset;
+                width: 260px;
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-start;
+                padding: 24px;
+                border-top: none;
+                border-right: 1px solid var(--border-color);
+            }
+            .sidebar .logo {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                font-size: 24px;
+                font-weight: 600;
+                margin-bottom: 40px;
+                color: var(--text-color);
+            }
+            .sidebar .logo i {
+                color: var(--primary-color);
+                font-size: 28px;
+            }
+            .sidebar .nav-links {
+                flex-direction: column;
+                justify-content: flex-start;
+                flex-grow: 1;
+                gap: 8px;
+            }
+            .sidebar .nav-links a {
+                flex-direction: row;
+                justify-content: flex-start;
+                align-items: center;
+                gap: 16px;
+                padding: 12px 16px;
+                font-size: 15px;
+                border-radius: 8px;
+                transition: all 0.3s ease;
+            }
+            .sidebar .nav-links a i {
+                font-size: 18px;
+                width: 20px;
+                text-align: center;
+            }
+            .sidebar .nav-links li a:hover {
+                background-color: #eef2ff;
+                color: var(--primary-color);
+            }
+            .sidebar .nav-links li.active a {
+                background-color: var(--primary-color);
+                color: white;
+            }
+
+            .sidebar .user-profile {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding-top: 20px;
+                border-top: 1px solid var(--border-color);
+            }
+            .sidebar .user-profile img {
+                border-radius: 50%;
+            }
+            .sidebar .user-profile .user-info h4 {
+                font-size: 14px;
+                font-weight: 600;
+            }
+            .sidebar .user-profile .user-info small {
+                font-size: 12px;
+                color: var(--text-light);
+            }
+
+            .main-content {
+                order: unset;
+                padding: 32px;
+            }
+            .journal-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            #entry-form-card {
+                grid-row: 1 / 3;
+            }
+            #journal-history-card {
+                grid-column: 2 / 3;
+                grid-row: 1 / 2;
+            }
+            #ai-insights-card {
+                grid-column: 2 / 3;
+                grid-row: 2 / 3;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fa-solid fa-heart-pulse"></i>
+                <h2>MediAlert</h2>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html"><i class="fa-solid fa-table-columns"></i><span>Dashboard</span></a></li>
+                <li><a href="add-medicine.html"><i class="fa-solid fa-pills"></i><span>Add Medicine</span></a></li>
+                <li class="active"><a href="journal.html"><i class="fa-solid fa-book-medical"></i><span>Journal</span></a></li>
+                <li><a href="insight.html"><i class="fa-solid fa-chart-line"></i><span>Health Insights</span></a></li>
+                <li><a href="#"><i class="fa-solid fa-file-pdf"></i><span>Report</span></a></li>
+                <li><a href="settings.html"><i class="fa-solid fa-gear"></i><span>Settings</span></a></li>
+            </ul>
+            <div class="user-profile">
+                <img src="" alt="User Avatar">
+                <div class="user-info">
+                    <h4>Alex Turner</h4>
+                    <small>alex.turner@email.com</small>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header>
+                <h1>Health Journal</h1>
+                <p>Log your daily mood, symptoms, and thoughts.</p>
+            </header>
+
+            <div class="journal-grid">
+                <!-- Entry Form Card -->
+                <div id="entry-form-card" class="card">
+                    <div class="card-header">
+                        <h2 id="form-date">Log for Today</h2>
+                    </div>
+                    <div class="form-section">
+                        <label>How are you feeling today?</label>
+                        <div class="mood-selector" id="mood-selector">
+                            <div class="mood-option" data-mood="awful"><span class="emoji">😞</span><span class="label">Awful</span></div>
+                            <div class="mood-option" data-mood="bad"><span class="emoji">😟</span><span class="label">Bad</span></div>
+                            <div class="mood-option" data-mood="ok"><span class="emoji">😐</span><span class="label">OK</span></div>
+                            <div class="mood-option" data-mood="good"><span class="emoji">🙂</span><span class="label">Good</span></div>
+                            <div class="mood-option" data-mood="great"><span class="emoji">😄</span><span class="label">Great</span></div>
+                        </div>
+                    </div>
+                    <div class="form-section">
+                        <label>Any symptoms?</label>
+                        <div class="symptom-tags" id="symptom-selector">
+                            <span class="symptom-tag" data-symptom="Headache">Headache</span>
+                            <span class="symptom-tag" data-symptom="Fatigue">Fatigue</span>
+                            <span class="symptom-tag" data-symptom="Nausea">Nausea</span>
+                            <span class="symptom-tag" data-symptom="Fever">Fever</span>
+                        </div>
+                    </div>
+                    <div class="form-section">
+                        <label>Add your thoughts...</label>
+                        <textarea id="journal-notes" class="notes-textarea" placeholder="What's on your mind? Any highlights from the day?"></textarea>
+                    </div>
+                    <button id="save-entry-btn" class="submit-btn">Save Today's Entry</button>
+                </div>
+
+                <!-- Journal History Card -->
+                <div id="journal-history-card" class="card">
+                    <div class="card-header">
+                        <h2>Journal History</h2>
+                    </div>
+                    <div id="calendar-header">
+                        <button id="prev-month-btn" aria-label="Previous month"><i class="fa-solid fa-chevron-left"></i></button>
+                        <span id="month-year"></span>
+                        <button id="next-month-btn" aria-label="Next month"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                    <div id="calendar-grid"></div>
+                    <div id="entry-display" class="hidden">
+                        <h3 id="display-date"></h3>
+                        <div id="display-mood"></div>
+                        <div id="display-symptoms"></div>
+                        <div id="display-notes"></div>
+                    </div>
+                </div>
+
+                <!-- AI Insights Card -->
+                <div id="ai-insights-card" class="card">
+                    <div class="card-header">
+                        <h2>AI Powered Insights</h2>
+                    </div>
+                    <button id="ai-summary-btn" class="ai-btn"><i class="fa-solid fa-wand-magic-sparkles"></i> Generate Weekly Summary</button>
+                    <div id="ai-summary-output" class="ai-summary">Click the button to generate an AI summary of your last 7 days.</div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Toast Notification Element -->
+    <div id="toast-notification" class="toast"></div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- STATE ---
+        let journalEntries = JSON.parse(localStorage.getItem('journalEntries')) || {};
+        let currentDate = new Date();
+        let selectedMood = null;
+        let selectedSymptoms = [];
+
+        // --- DOM ELEMENTS ---
+        const moodSelector = document.getElementById('mood-selector');
+        const symptomSelector = document.getElementById('symptom-selector');
+        const journalNotes = document.getElementById('journal-notes');
+        const saveEntryBtn = document.getElementById('save-entry-btn');
+        const calendarGrid = document.getElementById('calendar-grid');
+        const monthYearEl = document.getElementById('month-year');
+        const prevMonthBtn = document.getElementById('prev-month-btn');
+        const nextMonthBtn = document.getElementById('next-month-btn');
+        const entryDisplay = document.getElementById('entry-display');
+        const aiSummaryBtn = document.getElementById('ai-summary-btn');
+        const aiSummaryOutput = document.getElementById('ai-summary-output');
+        const toastNotification = document.getElementById('toast-notification');
+
+        // --- TOAST NOTIFICATION ---
+        const showToast = (message) => {
+            toastNotification.textContent = message;
+            toastNotification.classList.add('show');
+            setTimeout(() => {
+                toastNotification.classList.remove('show');
+            }, 3000);
+        };
+
+        // --- CALENDAR LOGIC ---
+        const renderCalendar = () => {
+            calendarGrid.innerHTML = '';
+            const month = currentDate.getMonth();
+            const year = currentDate.getFullYear();
+            
+            monthYearEl.textContent = `${currentDate.toLocaleString('default', { month: 'long' })} ${year}`;
+            
+            const firstDayOfMonth = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+            ['S', 'M', 'T', 'W', 'T', 'F', 'S'].forEach(day => {
+                const dayNameEl = document.createElement('div');
+                dayNameEl.className = 'calendar-day-name';
+                dayNameEl.textContent = day;
+                calendarGrid.appendChild(dayNameEl);
+            });
+
+            for (let i = 0; i < firstDayOfMonth; i++) {
+                calendarGrid.appendChild(document.createElement('div'));
+            }
+
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dayEl = document.createElement('div');
+                dayEl.className = 'calendar-day';
+                dayEl.textContent = i;
+                const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                
+                if (journalEntries[dateKey]) {
+                    dayEl.classList.add('has-entry');
+                    dayEl.classList.add(`mood-${journalEntries[dateKey].mood}`);
+                    dayEl.addEventListener('click', () => displayEntry(dateKey));
+                }
+                
+                if (i === new Date().getDate() && month === new Date().getMonth() && year === new Date().getFullYear()) {
+                    dayEl.classList.add('today');
+                }
+                
+                calendarGrid.appendChild(dayEl);
+            }
+        };
+
+        // --- ENTRY DISPLAY LOGIC ---
+        const displayEntry = (dateKey) => {
+            const entry = journalEntries[dateKey];
+            if (!entry) return;
+
+            const displayDate = new Date(dateKey + 'T00:00:00'); // Fix timezone issue
+            document.getElementById('display-date').textContent = `Entry for ${displayDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}`;
+            
+            const moodEmojis = {great:'😄', good:'🙂', ok:'😐', bad:'😟', awful:'😞'};
+            document.getElementById('display-mood').innerHTML = `<strong>Mood</strong> <span class="emoji">${moodEmojis[entry.mood]}</span> ${entry.mood.charAt(0).toUpperCase() + entry.mood.slice(1)}`;
+
+            const symptomsHTML = entry.symptoms.length > 0 ? entry.symptoms.map(s => `<span class="symptom-tag selected">${s}</span>`).join(' ') : 'No symptoms reported.';
+            document.getElementById('display-symptoms').innerHTML = `<strong>Symptoms</strong> ${symptomsHTML}`;
+            
+            document.getElementById('display-notes').innerHTML = `<strong>Notes</strong> <p>${entry.notes || 'No notes added.'}</p>`;
+            
+            entryDisplay.classList.remove('hidden');
+        };
+
+        // --- FORM HANDLING ---
+        moodSelector.addEventListener('click', (e) => {
+            const target = e.target.closest('.mood-option');
+            if (!target) return;
+            
+            document.querySelectorAll('.mood-option').forEach(el => el.classList.remove('selected'));
+            target.classList.add('selected');
+            selectedMood = target.dataset.mood;
+        });
+
+        symptomSelector.addEventListener('click', (e) => {
+            const target = e.target;
+            if (!target.classList.contains('symptom-tag')) return;
+
+            target.classList.toggle('selected');
+            const symptom = target.dataset.symptom;
+            if (selectedSymptoms.includes(symptom)) {
+                selectedSymptoms = selectedSymptoms.filter(s => s !== symptom);
+            } else {
+                selectedSymptoms.push(symptom);
+            }
+        });
+
+        saveEntryBtn.addEventListener('click', () => {
+            if (!selectedMood) {
+                showToast('Please select your mood.');
+                return;
+            }
+            const todayKey = new Date().toISOString().split('T')[0];
+            const newEntry = {
+                mood: selectedMood,
+                symptoms: selectedSymptoms,
+                notes: journalNotes.value.trim()
+            };
+            journalEntries[todayKey] = newEntry;
+            localStorage.setItem('journalEntries', JSON.stringify(journalEntries));
+            
+            showToast('Journal entry saved successfully!');
+            renderCalendar();
+            displayEntry(todayKey);
+        });
+
+        // --- AI SUMMARY (DEMO) ---
+        aiSummaryBtn.addEventListener('click', () => {
+            aiSummaryOutput.textContent = "Analyzing your entries... please wait.";
+            aiSummaryBtn.disabled = true;
+
+            let recentEntries = "";
+            for (let i = 0; i < 7; i++) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                const dateKey = date.toISOString().split('T')[0];
+                if (journalEntries[dateKey]) {
+                    recentEntries += `Date: ${dateKey}\nMood: ${journalEntries[dateKey].mood}\nSymptoms: ${journalEntries[dateKey].symptoms.join(', ') || 'none'}\nNotes: ${journalEntries[dateKey].notes}\n\n`;
+                }
+            }
+
+            if (recentEntries.length === 0) {
+                aiSummaryOutput.textContent = "Not enough data to generate a summary. Please add more entries.";
+                aiSummaryBtn.disabled = false;
+                return;
+            }
+
+            // Simulated AI Response
+            setTimeout(() => {
+                const demoResponse = "Based on your entries, it seems your mood has been generally positive this week, which is great! I noticed you reported 'Fatigue' on the same day your mood was 'OK' rather than 'Good'. Ensuring consistent sleep might help maintain your energy levels. Keep up the great work tracking your health!";
+                aiSummaryOutput.textContent = demoResponse;
+                aiSummaryBtn.disabled = false;
+            }, 1500);
+        });
+        
+        // --- EVENT LISTENERS ---
+        prevMonthBtn.addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            renderCalendar();
+        });
+        nextMonthBtn.addEventListener('click', () => {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            renderCalendar();
+        });
+
+        // --- INITIALIZATION ---
+        renderCalendar();
+    });
+    </script>
+</body>
+</html>
